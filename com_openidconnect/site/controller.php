@@ -10,6 +10,8 @@
 // No direct access to this file
 defined('_JEXEC') or die('Restricted access');
 
+use Joomla\CMS\Factory;
+
 /**
  * OpenID Connect Component Controller
  *
@@ -17,11 +19,55 @@ defined('_JEXEC') or die('Restricted access');
  */
 class OpenIDConnectController extends JControllerLegacy
 {
+    private $redirect_uri = 'index.php?option=com_openidconnect';
+
     function display() {
-        die('Display task');
+        $base_url = JUri::base();
+        $code = Factory::getApplication()->input->get('code', '');
+        if ($code) {
+            $success = false;
+            $token_endpoint = 'https://192.168.56.4/auth/realms/acvz/protocol/openid-connect/token';
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $token_endpoint);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false); // FIXME: Testing only
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // FIXME: Testing only
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array(
+                'grant_type' => 'authorization_code',
+                'code' => $code,
+                'client_id' => 'joomla',
+                'client_secret' => 'b776c724-2274-40a0-9b97-ecfb612a7a3b',
+                'redirect_uri' => $base_url . $this->redirect_uri
+            )));
+            $result = curl_exec($ch);
+            $jresult = json_decode($result);
+            if (curl_errno($ch)) {
+                JLog::add('curl error: ' . curl_error($ch), JLog::ERROR, 'openid-connect');
+            }
+            curl_close($ch);
+            if (isset($jresult->access_token)) {
+                die($jresult->access_token);
+            } else {
+                JLog::add('unexpected response: ' . $result);
+            }
+
+            if (!$success) {
+                Factory::getApplication()->enqueueMessage('Oops! Something went wrong while logging you in. Please try again later. Contact the system administrator if the problem persists.', 'error');
+            }
+
+            $this->setRedirect($base_url);
+        }
     }
-    
-    function test() {
-        die('test');
+
+    function login() {
+        $base_url = JUri::base();
+        $client_id = 'joomla';
+        $response_type = 'code';
+        $this->setRedirect('https://192.168.56.4/auth/realms/acvz/protocol/openid-connect/auth' . 
+            '?client_id=' . $client_id .
+            '&response_type=' . $response_type .
+            '&redirect_uri=' . $base_url . $this->redirect_uri);
+        return;
     }
 }
