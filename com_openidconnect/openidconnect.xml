@@ -6,7 +6,7 @@
 	<author>Damy van Valenberg</author>
 	<authorEmail>damyvv@hotmail.com</authorEmail>
 	<authorUrl>https://www.coval.nl</authorUrl>
-	<copyright>2020 Coval</copyright>
+	<copyright>2020 Coval B.V.</copyright>
 	<license>GNU General Public License version 3</license>
 	<!--  The version string is recorded in the components table -->
 	<version>0.0.1</version>
@@ -20,6 +20,7 @@
 	<files folder="site">
 		<filename>index.html</filename>
 		<filename>openidconnect.php</filename>
+		<filename>controller.php</filename>
 	</files>
 
 	<administration>
