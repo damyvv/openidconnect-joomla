@@ -22,6 +22,13 @@ class OpenIDConnectController extends JControllerLegacy
     private $redirect_uri = 'index.php?option=com_openidconnect';
 
     function display($cacheable = false, $urlparams = array()) {
+        // Testing to load a custom user
+        JLoader::import('openidconnectuser', JPATH_COMPONENT);
+        $user = new OpenIDConnectUser();
+        $user->load(80);
+        var_dump($user);
+        die();
+
         $kid = 'OZ08_xCclcekK77XNXhLllMWBF0qOjobOaC6w_6kZvI';
         $cert = '
 -----BEGIN PUBLIC KEY-----

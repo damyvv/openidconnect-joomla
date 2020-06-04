@@ -20,6 +20,7 @@
 	<files folder="site">
 		<filename>index.html</filename>
 		<filename>openidconnect.php</filename>
+		<filename>openidconnectuser.php</filename>
 		<filename>controller.php</filename>
 	</files>
 
