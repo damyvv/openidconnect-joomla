@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="component" version="3.0" method="upgrade">
-	<name>com_openidconnect</name>
+	<name>OpenID Connect</name>
 	<!-- The following elements are optional and free of formatting constraints -->
 	<creationDate>June 2020</creationDate>
 	<author>Damy van Valenberg</author>

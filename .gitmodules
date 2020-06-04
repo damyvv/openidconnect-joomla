@@ -1,0 +1,3 @@
+[submodule "lib_openidconnectjwt/php-jwt"]
+	path = lib_openidconnectjwt/php-jwt
+	url = git@github.com:firebase/php-jwt.git

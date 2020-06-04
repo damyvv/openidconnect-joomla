@@ -21,7 +21,19 @@ class OpenIDConnectController extends JControllerLegacy
 {
     private $redirect_uri = 'index.php?option=com_openidconnect';
 
-    function display() {
+    function display($cacheable = false, $urlparams = array()) {
+        $kid = 'OZ08_xCclcekK77XNXhLllMWBF0qOjobOaC6w_6kZvI';
+        $cert = '
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2ilEg9wmdi4RJFKT7ynV
+NI6VjGgc3A1XJ6lFtZ7/E3qbymOM8aU1rbprrg5PzYUvRS15aNafrO5N5xnQT8jA
+KpZe+/7rHlFFj2KA1wvlmsx/dfXhgw5kjf1jnqZxa8T4A3uJ/UPx/awQewXw0YgR
+MrvL6kvhwwfucWw6ffG6NdZM5RDUxbFZewEsVSisY+5jNy4BnodayG/AgguzrnR6
+g3M38/plhL7yj8Wb4HjikP8zbuXft82IM77F8wK940zqsyO/LwxOY2jDf9hCHIZc
+Vxaee2mhIv5ptEjf21IiX/MMwPGyRVjdi8G1Pl3m0V6ooQQmC5dulwBWvhD6CrIe
+uwIDAQAB
+-----END PUBLIC KEY-----';
+
         $base_url = JUri::base();
         $code = Factory::getApplication()->input->get('code', '');
         if ($code) {
@@ -47,9 +59,16 @@ class OpenIDConnectController extends JControllerLegacy
             }
             curl_close($ch);
             if (isset($jresult->access_token)) {
-                die($jresult->access_token);
+                JLoader::discover('Firebase\\JWT\\', JPATH_LIBRARIES . '/openidconnectjwt/php-jwt/src');
+                try {
+                    $user = Firebase\JWT\JWT::decode($jresult->access_token, [$kid => $cert], array('RS256'));
+                    var_dump($user);
+                    die();
+                } catch (Exception $e) {
+                    JLog::add('JWT Decode exception: ' . $e->getMessage() . "\nToken was: " . $jresult->access_token, JLog::ERROR, 'openid-connect');
+                }
             } else {
-                JLog::add('unexpected response: ' . $result);
+                JLog::add('unexpected response: ' . $result, JLog::ERROR, 'openid-connect');
             }
 
             if (!$success) {

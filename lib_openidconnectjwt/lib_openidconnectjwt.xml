@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="library" version="3.0" method="upgrade">
+    <name>OpenID Connect JWT Library</name>
+	<creationDate>June 2020</creationDate>
+    <libraryname>openidconnectjwt</libraryname>
+    <author>Damy van Valenberg</author>
+	<authorEmail>damyvv@hotmail.com</authorEmail>
+	<authorUrl>https://www.coval.nl</authorUrl>
+	<copyright>2020 Coval B.V.</copyright>
+	<license>GNU General Public License version 3</license>
+    <version>0.0.1</version>
+    <description>OpenID Connect JWT Library</description>
+    <files>
+        <folder>php-jwt/src</folder>
+    </files>
+</extension>
