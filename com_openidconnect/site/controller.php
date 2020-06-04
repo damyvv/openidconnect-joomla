@@ -11,6 +11,7 @@
 defined('_JEXEC') or die('Restricted access');
 
 use Joomla\CMS\Factory;
+use Firebase\JWT\JWT;
 
 /**
  * OpenID Connect Component Controller
@@ -20,8 +21,21 @@ use Joomla\CMS\Factory;
 class OpenIDConnectController extends JControllerLegacy
 {
     private $redirect_uri = 'index.php?option=com_openidconnect';
+    private $oidc_table = 'openidconnect_users';
 
     function display($cacheable = false, $urlparams = array()) {
+        $kid = 'OZ08_xCclcekK77XNXhLllMWBF0qOjobOaC6w_6kZvI';
+        $cert = '
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2ilEg9wmdi4RJFKT7ynV
+NI6VjGgc3A1XJ6lFtZ7/E3qbymOM8aU1rbprrg5PzYUvRS15aNafrO5N5xnQT8jA
+KpZe+/7rHlFFj2KA1wvlmsx/dfXhgw5kjf1jnqZxa8T4A3uJ/UPx/awQewXw0YgR
+MrvL6kvhwwfucWw6ffG6NdZM5RDUxbFZewEsVSisY+5jNy4BnodayG/AgguzrnR6
+g3M38/plhL7yj8Wb4HjikP8zbuXft82IM77F8wK940zqsyO/LwxOY2jDf9hCHIZc
+Vxaee2mhIv5ptEjf21IiX/MMwPGyRVjdi8G1Pl3m0V6ooQQmC5dulwBWvhD6CrIe
+uwIDAQAB
+-----END PUBLIC KEY-----';
+
         $base_url = JUri::base();
         $code = Factory::getApplication()->input->get('code', '');
         if ($code) {
@@ -47,11 +61,34 @@ class OpenIDConnectController extends JControllerLegacy
             }
             curl_close($ch);
             if (isset($jresult->access_token)) {
-                // Load the user and set as active
-                $user = new OpenIDConnectUser();
-                if ($user->load_from_token($jresult->access_token, $jresult->refresh_token)) {
-                    JFactory::getSession()->set('user', $user);
-                    $success = true;
+                $decoded_user = null;
+                try { // to decode the access token
+                    $decoded_user = JWT::decode($jresult->access_token, [$kid => $cert], array('RS256'));
+                } catch (Exception $e) {
+                    JLog::add('JWT Decode exception: ' . $e->getMessage() . "\nToken was: " . $jresult->access_token, JLog::ERROR, 'openid-connect');
+                }
+                if ($decoded_user) {
+                    // Find the user if it exists
+                    $user_table = JUser::getTable()->getTableName();
+                    $db = JFactory::getDbo();
+                    $query = $db->getQuery(true);
+                    $query->select($user_table . '.id' . ',' . $this->oidc_table . '.oidc_uuid');
+                    $query->from($user_table);
+                    $query->join('INNER', $this->oidc_table . ' ON ' . $this->oidc_table . '.user_id' . 
+                        '=' . $user_table . '.id');
+                    $query->where($this->oidc_table . '.oidc_uuid' . ' LIKE ' . $db->quote($decoded_user->sub));
+
+                    $db->setQuery($query);
+                    
+                    $query_result = $db->loadObjectList();
+                    if (count($query_result) >= 1) {
+                        $user_id = $query_result[0]->id;
+                        $user = JFactory::getUser($user_id);
+                        JFactory::getSession()->set('user', $user);
+                        $success = true;
+                    } else {
+                        // TODO: Create a new user
+                    }
                 }
             } else {
                 JLog::add('unexpected response: ' . $result, JLog::ERROR, 'openid-connect');

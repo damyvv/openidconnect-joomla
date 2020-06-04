@@ -13,6 +13,18 @@
 	<!-- The description is optional and defaults to the name -->
 	<description>This is the component for the OpenID Connect plugin.</description>
 
+	<install>
+		<sql>
+			<file driver="mysql" charset="utf8">sql/install.sql</file>
+		</sql>
+	</install>
+	<uninstall>
+		<sql>
+			<file driver="mysql" charset="utf8">sql/uninstall.sql</file>
+		</sql>
+	</uninstall>
+
+
 	<!-- Site Main File Copy Section -->
 	<!-- Note the folder attribute: This attribute describes the folder
 		to copy FROM in the package to install therefore files copied
@@ -24,5 +36,9 @@
 	</files>
 
 	<administration>
+		<files folder="admin">
+			<filename>index.html</filename>
+			<folder>sql</folder>
+		</files>
 	</administration>
 </extension>
