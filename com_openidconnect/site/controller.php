@@ -80,14 +80,37 @@ uwIDAQAB
 
                     $db->setQuery($query);
                     
-                    $query_result = $db->loadObjectList();
-                    if (count($query_result) >= 1) {
-                        $user_id = $query_result[0]->id;
+                    $query_result = $db->loadObject();
+                    if ($query_result) {
+                        $user_id = $query_result->id;
                         $user = JFactory::getUser($user_id);
                         JFactory::getSession()->set('user', $user);
                         $success = true;
                     } else {
-                        // TODO: Create a new user
+                        $user = new JUser;
+                        $user_data = array(
+                            "username" => $decoded_user->preferred_username,
+                            "name" => $decoded_user->name,
+                            "email" => $decoded_user->email,
+                            "block" => 0,
+                            "is_guest" => 0
+                        );
+                        if (!$user->bind($user_data)) {
+                            JLog::add('Could not bind user data. Error: ' . $user->getError(), JLog::ERROR, 'openid-connect');
+                        } else {
+                            if (!$user->save()) {
+                                JLog::add('Failed to save user. Error: ' . $user->getError(), JLog::ERROR, 'openid-connect');
+                            } else {
+                                $query = $db->getQuery(true);
+                                $query->insert($this->oidc_table)
+                                      ->set('user_id = ' . $user->id)
+                                      ->set('oidc_uuid = ' . $db->quote($decoded_user->sub));
+                                $db->setQuery($query);
+                                $db->query();
+                                JFactory::getSession()->set('user', $user);
+                                $success = true;
+                            }
+                        }
                     }
                 }
             } else {
