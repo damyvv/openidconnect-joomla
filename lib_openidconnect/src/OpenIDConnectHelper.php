@@ -24,6 +24,7 @@ class OpenIDConnectHelper
             "name" => $decoded_token->name,
             "email" => $decoded_token->email,
             "block" => 0,
+            "activated" => 1,
             "is_guest" => 0
         );
         if (!$user->bind($user_data)) {
