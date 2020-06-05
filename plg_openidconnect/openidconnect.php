@@ -22,6 +22,7 @@ class plgSystemOpenIDConnect extends JPlugin
     public function onAfterInitialise()
     {
         JLoader::discover('Firebase\\JWT\\', JPATH_LIBRARIES . '/openidconnectjwt/php-jwt/src');
+        JLoader::discover('', JPATH_LIBRARIES . '/openidconnect/src');
         JLoader::import('openidconnectuser', JPATH_LIBRARIES . '/openidconnectuser/src');
     }
 }

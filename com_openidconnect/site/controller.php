@@ -68,7 +68,7 @@ class OpenIDConnectController extends JControllerLegacy
                     JFactory::getSession()->set('oidc_access_token', $jresult->access_token);
                     JFactory::getSession()->set('oidc_refresh_token', $jresult->refresh_token);
                     
-                    $user = $this->getUserFromToken($decoded_token);
+                    $user = OpenIDConnectHelper::getUserFromToken($decoded_token);
                     if ($user) {
                         JFactory::getSession()->set('user', $user);
                         $success = true;
@@ -101,7 +101,7 @@ class OpenIDConnectController extends JControllerLegacy
                     }
                 }
                 if ($success) {
-                    $this->updateUserRoles($decoded_token);
+                    OpenIDConnectHelper::updateUserRoles($decoded_token);
                 }
             } else {
                 JLog::add('unexpected response: ' . $result, JLog::ERROR, 'openid-connect');
@@ -137,49 +137,5 @@ class OpenIDConnectController extends JControllerLegacy
         $this->setRedirect($params->get('authorization_server_endpoint') . '/logout' .
             '?redirect_uri=' . $base_url);
         return;
-    }
-
-    private function updateUserRoles($decoded_token) {
-        $app = JFactory::getApplication();
-        $params = $app->getParams('com_openidconnect');
-        $client_id = $params->get('client_id');
-        $user = $this->getUserFromToken($decoded_token);
-
-        $db = JFactory::getDbo();
-        $db->setQuery('SELECT id FROM #__usergroups' . ' WHERE LOWER(title) LIKE \'guest\'');
-        $groups = array($db->loadObject()->id);
-        
-        if (isset($decoded_token->resource_access->$client_id->roles)) {
-            $roles = $decoded_token->resource_access->$client_id->roles;
-            $groups = array();
-            foreach ($roles as $role) {
-                $db->setQuery('SELECT id FROM #__usergroups' . ' WHERE LOWER(title) LIKE LOWER(' . $db->quote($role) . ')');
-                $group_id = $db->loadObject()->id;
-                if ($group_id) {
-                    array_push($groups, $group_id);
-                }
-            }
-        }
-        JUserHelper::setUserGroups($user->id, $groups);
-    }
-
-    private function getUserFromToken($decoded_token) {
-        $user_table = JUser::getTable()->getTableName();
-        $db = JFactory::getDbo();
-        $query = $db->getQuery(true);
-        $query->select($user_table . '.id' . ',' . $this->oidc_table . '.oidc_uuid');
-        $query->from($user_table);
-        $query->join('INNER', $this->oidc_table . ' ON ' . $this->oidc_table . '.user_id' . 
-            '=' . $user_table . '.id');
-        $query->where($this->oidc_table . '.oidc_uuid' . ' LIKE ' . $db->quote($decoded_token->sub));
-
-        $db->setQuery($query);
-        
-        $query_result = $db->loadObject();
-        if (!$query_result) {
-            return null;
-        }
-        $user_id = $query_result->id;
-        return JFactory::getUser($user_id);
     }
 }

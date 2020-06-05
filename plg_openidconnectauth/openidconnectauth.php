@@ -49,8 +49,13 @@ class plgAuthenticationOpenIDConnectAuth extends JPlugin
         }
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post_params));
         $result = curl_exec($ch);
+        $jresult = json_decode($result);
+        if (curl_errno($ch)) {
+            JLog::add('curl error: ' . curl_error($ch), JLog::ERROR, 'openid-connect');
+        }
+        curl_close($ch);
 
-        var_dump($result);
+        var_dump($jresult);
         die();
     }
 }
