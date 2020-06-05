@@ -135,4 +135,12 @@ uwIDAQAB
             '&redirect_uri=' . $base_url . $this->redirect_uri);
         return;
     }
+
+    function logout() {
+        Factory::getApplication()->logout();
+        $base_url = JUri::base();
+        $this->setRedirect('https://192.168.56.4/auth/realms/acvz/protocol/openid-connect/logout' .
+            '?redirect_uri=' . $base_url);
+        return;
+    }
 }
