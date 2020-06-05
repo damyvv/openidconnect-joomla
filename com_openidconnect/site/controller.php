@@ -20,40 +20,37 @@ use Firebase\JWT\JWT;
  */
 class OpenIDConnectController extends JControllerLegacy
 {
-    private $redirect_uri = 'index.php?option=com_openidconnect';
+    private $component_uri = 'index.php?option=com_openidconnect';
     private $oidc_table = 'openidconnect_users';
 
     function display($cacheable = false, $urlparams = array()) {
-        $kid = 'OZ08_xCclcekK77XNXhLllMWBF0qOjobOaC6w_6kZvI';
-        $cert = '
------BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2ilEg9wmdi4RJFKT7ynV
-NI6VjGgc3A1XJ6lFtZ7/E3qbymOM8aU1rbprrg5PzYUvRS15aNafrO5N5xnQT8jA
-KpZe+/7rHlFFj2KA1wvlmsx/dfXhgw5kjf1jnqZxa8T4A3uJ/UPx/awQewXw0YgR
-MrvL6kvhwwfucWw6ffG6NdZM5RDUxbFZewEsVSisY+5jNy4BnodayG/AgguzrnR6
-g3M38/plhL7yj8Wb4HjikP8zbuXft82IM77F8wK940zqsyO/LwxOY2jDf9hCHIZc
-Vxaee2mhIv5ptEjf21IiX/MMwPGyRVjdi8G1Pl3m0V6ooQQmC5dulwBWvhD6CrIe
-uwIDAQAB
------END PUBLIC KEY-----';
+        $app = JFactory::getApplication();
+        $params = $app->getParams('com_openidconnect');
+
+        $kid = $params->get('kid');
+        $cert = $params->get('cert');
 
         $base_url = JUri::base();
         $code = Factory::getApplication()->input->get('code', '');
         if ($code) {
             $success = false;
-            $token_endpoint = 'https://192.168.56.4/auth/realms/acvz/protocol/openid-connect/token';
+            $token_endpoint = $params->get('authorization_server_endpoint') . '/token';
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $token_endpoint);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false); // FIXME: Testing only
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // FIXME: Testing only
             curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array(
+            $post_params = array(
                 'grant_type' => 'authorization_code',
                 'code' => $code,
-                'client_id' => 'joomla',
-                'client_secret' => 'b776c724-2274-40a0-9b97-ecfb612a7a3b',
-                'redirect_uri' => $base_url . $this->redirect_uri
-            )));
+                'client_id' => $params->get('client_id'),
+                'redirect_uri' => '/' . $this->component_uri);
+            $client_secret = $params->get('client_secret');
+            if ($client_secret) {
+                $post_params = array_merge($post_params, array('client_secret' => $params->get('client_secret')));
+            }
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post_params));
             $result = curl_exec($ch);
             $jresult = json_decode($result);
             if (curl_errno($ch)) {
@@ -129,20 +126,24 @@ uwIDAQAB
     }
 
     function login() {
+        $app = JFactory::getApplication();
+        $params = $app->getParams('com_openidconnect');
         $base_url = JUri::base();
         $client_id = 'joomla';
         $response_type = 'code';
-        $this->setRedirect('https://192.168.56.4/auth/realms/acvz/protocol/openid-connect/auth' . 
+        $this->setRedirect($params->get('authorization_server_endpoint') . '/auth' . 
             '?client_id=' . $client_id .
             '&response_type=' . $response_type .
-            '&redirect_uri=' . $base_url . $this->redirect_uri);
+            '&redirect_uri=' . '/' . $this->component_uri);
         return;
     }
 
     function logout() {
+        $app = JFactory::getApplication();
+        $params = $app->getParams('com_openidconnect');
         Factory::getApplication()->logout();
         $base_url = JUri::base();
-        $this->setRedirect('https://192.168.56.4/auth/realms/acvz/protocol/openid-connect/logout' .
+        $this->setRedirect($params->get('authorization_server_endpoint') . '/logout' .
             '?redirect_uri=' . $base_url);
         return;
     }

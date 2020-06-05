@@ -38,7 +38,9 @@
 	<administration>
 		<files folder="admin">
 			<filename>index.html</filename>
+			<filename>config.xml</filename>
 			<folder>sql</folder>
+			<folder>language</folder>
 		</files>
 	</administration>
 </extension>

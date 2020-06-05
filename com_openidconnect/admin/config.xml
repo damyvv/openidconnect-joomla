@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config>
+    <fieldset name="setup" label="OpenID Connect setup">
+        <field
+            name="authorization_server_endpoint"
+            type="text"
+            label="Authorization Server Endpoint"
+            description="The URL to your (openidconnect) authorization server endpoint">
+        </field>
+        <field
+            name="after_login_redirect_uri"
+            type="text"
+            label="After login uri"
+            description="Uri to navigate to after login."
+            default="index.php">
+        </field>
+        <field
+            name="kid"
+            type="text"
+            label="Key ID"
+            description="Key ID of the tokens given by the authorization server">
+        </field>
+        <field
+            name="cert"
+            type="textarea"
+            label="Public key"
+            description="Public key associated with the key id. This is used to verify the tokens given by the authorization server.">
+        </field>
+        <field
+            name="client_id"
+            type="text"
+            label="Client ID"
+            description="Client ID as set in the authorization server.">
+        </field>
+        <field
+            name="client_secret"
+            type="text"
+            label="Client secret"
+            description="Client secret as set in the authorization server.">
+        </field>
+    </fieldset>
+</config>
