@@ -4,5 +4,5 @@ CREATE TABLE IF NOT EXISTS `openidconnect_users` (
   UNIQUE KEY `user_id_UNIQUE` (`user_id`),
   UNIQUE KEY `oidc_uuid_UNIQUE` (`oidc_uuid`),
   KEY `user_id_idx` (`user_id`),
-  CONSTRAINT `user_id` FOREIGN KEY (`user_id`) REFERENCES `lbxqn_users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
+  CONSTRAINT `user_id` FOREIGN KEY (`user_id`) REFERENCES `#__users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
