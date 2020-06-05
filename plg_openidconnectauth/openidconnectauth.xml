@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension version="3.1" type="plugin" group="authentication">
+	<name>OpenID Connect Auth</name>
+	<!-- The following elements are optional and free of formatting constraints -->
+	<creationDate>June 2020</creationDate>
+	<author>Damy van Valenberg</author>
+	<authorEmail>damyvv@hotmail.com</authorEmail>
+	<authorUrl>https://www.coval.nl</authorUrl>
+	<copyright>2020 Coval B.V.</copyright>
+	<license>GNU General Public License version 3</license>
+	<!--  The version string is recorded in the components table -->
+	<version>0.0.1</version>
+	<description>This plugin allows direct grants via the joomla login form. So this plugin is optional.</description>
+	<files>
+		<filename plugin="openidconnectauth">openidconnectauth.php</filename>
+		<filename>index.html</filename>
+	</files>
+</extension>
