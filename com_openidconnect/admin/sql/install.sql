@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `openidconnect_users` (
+CREATE TABLE IF NOT EXISTS `#__openidconnect_users` (
   `user_id` int NOT NULL,
   `oidc_uuid` varchar(45) NOT NULL,
   UNIQUE KEY `user_id_UNIQUE` (`user_id`),

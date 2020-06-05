@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS `openidconnect_users`;
+DROP TABLE IF EXISTS `#__openidconnect_users`;

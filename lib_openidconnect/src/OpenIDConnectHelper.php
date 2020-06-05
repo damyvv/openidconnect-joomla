@@ -6,7 +6,7 @@
 
 class OpenIDConnectHelper
 {
-    private const OIDC_TABLE_NAME = 'openidconnect_users';
+    private const OIDC_TABLE_NAME = '#__openidconnect_users';
 
     public static function getOrCreateUserFromToken($decoded_token) {
         $user = self::getUserFromToken($decoded_token);

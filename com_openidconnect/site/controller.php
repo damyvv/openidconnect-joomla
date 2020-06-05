@@ -21,7 +21,6 @@ use Firebase\JWT\JWT;
 class OpenIDConnectController extends JControllerLegacy
 {
     private $component_uri = 'index.php?option=com_openidconnect';
-    private $oidc_table = 'openidconnect_users';
 
     function display($cacheable = false, $urlparams = array()) {
         $app = JFactory::getApplication();
