@@ -65,43 +65,14 @@ class OpenIDConnectController extends JControllerLegacy
                     JLog::add('JWT Decode exception: ' . $e->getMessage() . "\nToken was: " . $jresult->access_token, JLog::ERROR, 'openid-connect');
                 }
                 if ($decoded_token) {
-                    JFactory::getSession()->set('oidc_access_token', $jresult->access_token);
-                    JFactory::getSession()->set('oidc_refresh_token', $jresult->refresh_token);
+                    OpenIDConnectHelper::setTokens($jresult->access_token, $jresult->refresh_token);
                     
-                    $user = OpenIDConnectHelper::getUserFromToken($decoded_token);
+                    $user = OpenIDConnectHelper::getOrCreateUserFromToken($decoded_token);
                     if ($user) {
                         JFactory::getSession()->set('user', $user);
+                        OpenIDConnectHelper::updateUserRoles($decoded_token);
                         $success = true;
-                    } else {
-                        $user = new JUser;
-                        $user_data = array(
-                            "username" => $decoded_token->preferred_username,
-                            "name" => $decoded_token->name,
-                            "email" => $decoded_token->email,
-                            "block" => 0,
-                            "is_guest" => 0
-                        );
-                        if (!$user->bind($user_data)) {
-                            JLog::add('Could not bind user data. Error: ' . $user->getError(), JLog::ERROR, 'openid-connect');
-                        } else {
-                            if (!$user->save()) {
-                                JLog::add('Failed to save user. Error: ' . $user->getError(), JLog::ERROR, 'openid-connect');
-                            } else {
-                                $db = JFactory::getDbo();
-                                $query = $db->getQuery(true);
-                                $query->insert($this->oidc_table)
-                                      ->set('user_id = ' . $user->id)
-                                      ->set('oidc_uuid = ' . $db->quote($decoded_token->sub));
-                                $db->setQuery($query);
-                                $db->query();
-                                JFactory::getSession()->set('user', $user);
-                                $success = true;
-                            }
-                        }
                     }
-                }
-                if ($success) {
-                    OpenIDConnectHelper::updateUserRoles($decoded_token);
                 }
             } else {
                 JLog::add('unexpected response: ' . $result, JLog::ERROR, 'openid-connect');

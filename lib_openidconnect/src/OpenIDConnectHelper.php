@@ -8,6 +8,44 @@ class OpenIDConnectHelper
 {
     private const OIDC_TABLE_NAME = 'openidconnect_users';
 
+    public static function getOrCreateUserFromToken($decoded_token) {
+        $user = self::getUserFromToken($decoded_token);
+        if ($user) {
+            return $user;
+        }
+        $user = self::createUserFromToken($decoded_token);
+        return $user;
+    }
+
+    public static function createUserFromToken($decoded_token) {
+        $user = new JUser;
+        $user_data = array(
+            "username" => $decoded_token->preferred_username,
+            "name" => $decoded_token->name,
+            "email" => $decoded_token->email,
+            "block" => 0,
+            "is_guest" => 0
+        );
+        if (!$user->bind($user_data)) {
+            JLog::add('Could not bind user data. Error: ' . $user->getError(), JLog::ERROR, 'openid-connect');
+            $user = null;
+        } else {
+            if (!$user->save()) {
+                JLog::add('Failed to save user. Error: ' . $user->getError(), JLog::ERROR, 'openid-connect');
+                $user = null;
+            } else {
+                $db = JFactory::getDbo();
+                $query = $db->getQuery(true);
+                $query->insert(self::OIDC_TABLE_NAME)
+                        ->set('user_id = ' . $user->id)
+                        ->set('oidc_uuid = ' . $db->quote($decoded_token->sub));
+                $db->setQuery($query);
+                $db->query();
+            }
+        }
+        return $user;
+    }
+
     public static function updateUserRoles($decoded_token) {
         $app = JFactory::getApplication();
         $params = $app->getParams('com_openidconnect');
@@ -50,5 +88,18 @@ class OpenIDConnectHelper
         }
         $user_id = $query_result->id;
         return JFactory::getUser($user_id);
+    }
+
+    public static function setTokens($access_token, $refresh_token) {
+        JFactory::getSession()->set('oidc_access_token', $jresult->access_token);
+        JFactory::getSession()->set('oidc_refresh_token', $jresult->refresh_token);
+    }
+
+    public static function getAccessToken() {
+        return JFactory::getSession()->get('oidc_access_token');
+    }
+
+    public static function getRefreshToken() {
+        return JFactory::getSession()->get('oidc_refresh_token');
     }
 }
