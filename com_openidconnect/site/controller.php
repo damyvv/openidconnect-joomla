@@ -143,19 +143,22 @@ class OpenIDConnectController extends JControllerLegacy
         $app = JFactory::getApplication();
         $params = $app->getParams('com_openidconnect');
         $client_id = $params->get('client_id');
-        $groups = array();
+        $user = $this->getUserFromToken($decoded_token);
+
+        $db = JFactory::getDbo();
+        $db->setQuery('SELECT id FROM #__usergroups' . ' WHERE LOWER(title) LIKE \'guest\'');
+        $groups = array($db->loadObject()->id);
+        
         if (isset($decoded_token->resource_access->$client_id->roles)) {
             $roles = $decoded_token->resource_access->$client_id->roles;
-            $user = $this->getUserFromToken($decoded_token);
-            
-            $db = JFactory::getDbo();
+            $groups = array();
             foreach ($roles as $role) {
                 $db->setQuery('SELECT id FROM #__usergroups' . ' WHERE LOWER(title) LIKE LOWER(' . $db->quote($role) . ')');
                 $group_id = $db->loadObject()->id;
                 array_push($groups, $group_id);
             }
-            JUserHelper::setUserGroups($user->id, $groups);
         }
+        JUserHelper::setUserGroups($user->id, $groups);
     }
 
     private function getUserFromToken($decoded_token) {
