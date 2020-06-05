@@ -48,7 +48,7 @@ class OpenIDConnectController extends JControllerLegacy
                 'redirect_uri' => '/' . $this->component_uri);
             $client_secret = $params->get('client_secret');
             if ($client_secret) {
-                $post_params = array_merge($post_params, array('client_secret' => $params->get('client_secret')));
+                $post_params['client_secret'] = $params->get('client_secret');
             }
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post_params));
             $result = curl_exec($ch);
@@ -87,6 +87,7 @@ class OpenIDConnectController extends JControllerLegacy
                             if (!$user->save()) {
                                 JLog::add('Failed to save user. Error: ' . $user->getError(), JLog::ERROR, 'openid-connect');
                             } else {
+                                $db = JFactory::getDbo();
                                 $query = $db->getQuery(true);
                                 $query->insert($this->oidc_table)
                                       ->set('user_id = ' . $user->id)
@@ -98,6 +99,9 @@ class OpenIDConnectController extends JControllerLegacy
                             }
                         }
                     }
+                }
+                if ($success) {
+                    $this->updateUserRoles($decoded_token);
                 }
             } else {
                 JLog::add('unexpected response: ' . $result, JLog::ERROR, 'openid-connect');
@@ -133,6 +137,25 @@ class OpenIDConnectController extends JControllerLegacy
         $this->setRedirect($params->get('authorization_server_endpoint') . '/logout' .
             '?redirect_uri=' . $base_url);
         return;
+    }
+
+    private function updateUserRoles($decoded_token) {
+        $app = JFactory::getApplication();
+        $params = $app->getParams('com_openidconnect');
+        $client_id = $params->get('client_id');
+        $groups = array();
+        if (isset($decoded_token->resource_access->$client_id->roles)) {
+            $roles = $decoded_token->resource_access->$client_id->roles;
+            $user = $this->getUserFromToken($decoded_token);
+            
+            $db = JFactory::getDbo();
+            foreach ($roles as $role) {
+                $db->setQuery('SELECT id FROM #__usergroups' . ' WHERE LOWER(title) LIKE LOWER(' . $db->quote($role) . ')');
+                $group_id = $db->loadObject()->id;
+                array_push($groups, $group_id);
+            }
+            JUserHelper::setUserGroups($user->id, $groups);
+        }
     }
 
     private function getUserFromToken($decoded_token) {
