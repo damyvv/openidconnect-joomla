@@ -155,7 +155,9 @@ class OpenIDConnectController extends JControllerLegacy
             foreach ($roles as $role) {
                 $db->setQuery('SELECT id FROM #__usergroups' . ' WHERE LOWER(title) LIKE LOWER(' . $db->quote($role) . ')');
                 $group_id = $db->loadObject()->id;
-                array_push($groups, $group_id);
+                if ($group_id) {
+                    array_push($groups, $group_id);
+                }
             }
         }
         JUserHelper::setUserGroups($user->id, $groups);
