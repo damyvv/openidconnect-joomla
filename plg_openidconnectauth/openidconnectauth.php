@@ -6,6 +6,8 @@
 
 defined('_JEXEC') or die;
 
+use Firebase\JWT\JWT;
+
 /**
  * Mylib plugin class.
  *
@@ -30,7 +32,11 @@ class plgAuthenticationOpenIDConnectAuth extends JPlugin
     {
         $app = JFactory::getApplication();
         $params = $app->getParams('com_openidconnect');
+        $kid = $params->get('kid');
+        $cert = $params->get('cert');
+        
         $token_endpoint = $params->get('authorization_server_endpoint') . '/token';
+        $success = false;
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $token_endpoint);
@@ -55,7 +61,30 @@ class plgAuthenticationOpenIDConnectAuth extends JPlugin
         }
         curl_close($ch);
 
-        var_dump($jresult);
-        die();
+        if (isset($jresult->access_token)) {
+            $decoded_token = null;
+            try { // to decode the access token
+                $decoded_token = JWT::decode($jresult->access_token, [$kid => $cert], array('RS256'));
+            } catch (Exception $e) {
+                JLog::add('JWT Decode exception: ' . $e->getMessage() . "\nToken was: " . $jresult->access_token, JLog::ERROR, 'openid-connect');
+            }
+            if ($decoded_token) {
+                OpenIDConnectHelper::setTokens($jresult->access_token, $jresult->refresh_token);
+                
+                $user = OpenIDConnectHelper::getOrCreateUserFromToken($decoded_token);
+                if ($user) {
+                    OpenIDConnectHelper::updateUserRoles($decoded_token);
+                    $success = true;
+                }
+            }
+        } else {
+            JLog::add('unexpected response: ' . $result, JLog::ERROR, 'openid-connect');
+        }
+
+        if ($success) {
+            $response->status = JAuthentication::STATUS_SUCCESS;
+        } else {
+            $response->status = JAuthentication::STATUS_FAILURE;
+        }
     }
 }
