@@ -84,6 +84,7 @@ class plgAuthenticationOpenIDConnectAuth extends JPlugin
         if ($success) {
             $response->status = JAuthentication::STATUS_SUCCESS;
         } else {
+            $response->error_message = 'Oops! Something went wrong while logging you in. Please try again later. Contact the system administrator if the problem persists.';
             $response->status = JAuthentication::STATUS_FAILURE;
         }
     }
