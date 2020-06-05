@@ -58,40 +58,26 @@ class OpenIDConnectController extends JControllerLegacy
             }
             curl_close($ch);
             if (isset($jresult->access_token)) {
-                $decoded_user = null;
+                $decoded_token = null;
                 try { // to decode the access token
-                    $decoded_user = JWT::decode($jresult->access_token, [$kid => $cert], array('RS256'));
+                    $decoded_token = JWT::decode($jresult->access_token, [$kid => $cert], array('RS256'));
                 } catch (Exception $e) {
                     JLog::add('JWT Decode exception: ' . $e->getMessage() . "\nToken was: " . $jresult->access_token, JLog::ERROR, 'openid-connect');
                 }
-                if ($decoded_user) {
+                if ($decoded_token) {
                     JFactory::getSession()->set('oidc_access_token', $jresult->access_token);
                     JFactory::getSession()->set('oidc_refresh_token', $jresult->refresh_token);
-
-                    // Find the user if it exists
-                    $user_table = JUser::getTable()->getTableName();
-                    $db = JFactory::getDbo();
-                    $query = $db->getQuery(true);
-                    $query->select($user_table . '.id' . ',' . $this->oidc_table . '.oidc_uuid');
-                    $query->from($user_table);
-                    $query->join('INNER', $this->oidc_table . ' ON ' . $this->oidc_table . '.user_id' . 
-                        '=' . $user_table . '.id');
-                    $query->where($this->oidc_table . '.oidc_uuid' . ' LIKE ' . $db->quote($decoded_user->sub));
-
-                    $db->setQuery($query);
                     
-                    $query_result = $db->loadObject();
-                    if ($query_result) {
-                        $user_id = $query_result->id;
-                        $user = JFactory::getUser($user_id);
+                    $user = $this->getUserFromToken($decoded_token);
+                    if ($user) {
                         JFactory::getSession()->set('user', $user);
                         $success = true;
                     } else {
                         $user = new JUser;
                         $user_data = array(
-                            "username" => $decoded_user->preferred_username,
-                            "name" => $decoded_user->name,
-                            "email" => $decoded_user->email,
+                            "username" => $decoded_token->preferred_username,
+                            "name" => $decoded_token->name,
+                            "email" => $decoded_token->email,
                             "block" => 0,
                             "is_guest" => 0
                         );
@@ -104,7 +90,7 @@ class OpenIDConnectController extends JControllerLegacy
                                 $query = $db->getQuery(true);
                                 $query->insert($this->oidc_table)
                                       ->set('user_id = ' . $user->id)
-                                      ->set('oidc_uuid = ' . $db->quote($decoded_user->sub));
+                                      ->set('oidc_uuid = ' . $db->quote($decoded_token->sub));
                                 $db->setQuery($query);
                                 $db->query();
                                 JFactory::getSession()->set('user', $user);
@@ -119,9 +105,10 @@ class OpenIDConnectController extends JControllerLegacy
 
             if (!$success) {
                 Factory::getApplication()->enqueueMessage('Oops! Something went wrong while logging you in. Please try again later. Contact the system administrator if the problem persists.', 'error');
+                $this->setRedirect($base_url);
+            } else {
+                $this->setRedirect($base_url . $params->get('after_login_redirect_uri'));
             }
-
-            $this->setRedirect($base_url);
         }
     }
 
@@ -146,5 +133,25 @@ class OpenIDConnectController extends JControllerLegacy
         $this->setRedirect($params->get('authorization_server_endpoint') . '/logout' .
             '?redirect_uri=' . $base_url);
         return;
+    }
+
+    private function getUserFromToken($decoded_token) {
+        $user_table = JUser::getTable()->getTableName();
+        $db = JFactory::getDbo();
+        $query = $db->getQuery(true);
+        $query->select($user_table . '.id' . ',' . $this->oidc_table . '.oidc_uuid');
+        $query->from($user_table);
+        $query->join('INNER', $this->oidc_table . ' ON ' . $this->oidc_table . '.user_id' . 
+            '=' . $user_table . '.id');
+        $query->where($this->oidc_table . '.oidc_uuid' . ' LIKE ' . $db->quote($decoded_token->sub));
+
+        $db->setQuery($query);
+        
+        $query_result = $db->loadObject();
+        if (!$query_result) {
+            return null;
+        }
+        $user_id = $query_result->id;
+        return JFactory::getUser($user_id);
     }
 }
