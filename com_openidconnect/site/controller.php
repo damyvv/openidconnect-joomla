@@ -68,6 +68,9 @@ uwIDAQAB
                     JLog::add('JWT Decode exception: ' . $e->getMessage() . "\nToken was: " . $jresult->access_token, JLog::ERROR, 'openid-connect');
                 }
                 if ($decoded_user) {
+                    JFactory::getSession()->set('oidc_access_token', $jresult->access_token);
+                    JFactory::getSession()->set('oidc_refresh_token', $jresult->refresh_token);
+
                     // Find the user if it exists
                     $user_table = JUser::getTable()->getTableName();
                     $db = JFactory::getDbo();
