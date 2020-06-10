@@ -41,8 +41,10 @@ class plgAuthenticationOpenIDConnectAuth extends JPlugin
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $token_endpoint);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false); // FIXME: Testing only
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // FIXME: Testing only
+        if ($params->get('disable_ssl_check') == 1) {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false); // FIXME: Testing only
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // FIXME: Testing only
+        }
         curl_setopt($ch, CURLOPT_POST, true);
         $post_params = array(
             'grant_type' => 'password',

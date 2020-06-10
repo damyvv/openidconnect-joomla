@@ -15,6 +15,12 @@
             default="index.php">
         </field>
         <field
+            name="disable_ssl_check"
+            type="checkbox"
+            label="Disable SSL check"
+            description="When enabled, it disables the SSL check on the authorization server endpoint.">
+        </field>
+        <field
             name="kid"
             type="text"
             label="Key ID"
