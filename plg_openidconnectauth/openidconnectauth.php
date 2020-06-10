@@ -73,7 +73,7 @@ class plgAuthenticationOpenIDConnectAuth extends JPlugin
                 JLog::add('JWT Decode exception: ' . $e->getMessage() . "\nToken was: " . $jresult->access_token, JLog::ERROR, 'openid-connect');
             }
             if ($decoded_token) {
-                OpenIDConnectHelper::setTokens($jresult->access_token, $jresult->refresh_token);
+                OpenIDConnectHelper::setTokens($decoded_token, $jresult->refresh_token);
                 
                 $user = OpenIDConnectHelper::getOrCreateUserFromToken($decoded_token);
                 if ($user) {

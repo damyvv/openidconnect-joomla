@@ -92,12 +92,12 @@ class OpenIDConnectHelper
     }
 
     public static function setTokens($access_token, $refresh_token) {
-        JFactory::getSession()->set('oidc_access_token', $jresult->access_token);
-        JFactory::getSession()->set('oidc_refresh_token', $jresult->refresh_token);
+        JFactory::getSession()->set('oidc_access_token', json_encode($access_token));
+        JFactory::getSession()->set('oidc_refresh_token', $refresh_token);
     }
 
     public static function getAccessToken() {
-        return JFactory::getSession()->get('oidc_access_token');
+        return json_decode(JFactory::getSession()->get('oidc_access_token'));
     }
 
     public static function getRefreshToken() {
