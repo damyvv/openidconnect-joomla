@@ -35,6 +35,8 @@ class plgAuthenticationOpenIDConnectAuth extends JPlugin
         $kid = $params->get('kid');
         $cert = $params->get('cert');
         
+        $err_msg = 'Oops! Something went wrong while logging you in. Please try again later. Contact the system administrator if the problem persists.';
+        
         $token_endpoint = $params->get('authorization_server_endpoint') . '/token';
         $success = false;
 
@@ -81,12 +83,15 @@ class plgAuthenticationOpenIDConnectAuth extends JPlugin
             }
         } else {
             JLog::add('unexpected response: ' . $result, JLog::ERROR, 'openid-connect');
+            if (isset($jresult->error_description)) {
+                $err_msg = $jresult->error_description;
+            }
         }
 
         if ($success) {
             $response->status = JAuthentication::STATUS_SUCCESS;
         } else {
-            $response->error_message = 'Oops! Something went wrong while logging you in. Please try again later. Contact the system administrator if the problem persists.';
+            $response->error_message = $err_msg;
             $response->status = JAuthentication::STATUS_FAILURE;
         }
     }
