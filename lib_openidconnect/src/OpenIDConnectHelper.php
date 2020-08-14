@@ -13,6 +13,10 @@ class OpenIDConnectHelper
         if ($user) {
             return $user;
         }
+        $user = self::tryLinkExistingUserFromToken($decoded_token);
+        if ($user) {
+            return $user;
+        }
         $user = self::createUserFromToken($decoded_token);
         return $user;
     }
@@ -45,6 +49,32 @@ class OpenIDConnectHelper
             }
         }
         return $user;
+    }
+
+    public static function tryLinkExistingUserFromToken($decoded_token) {
+        $user_table = JUser::getTable()->getTableName();
+        $db = JFactory::getDbo();
+        $query = $db->getQuery(true);
+        $query->select('id, username');
+        $query->from($user_table);
+        $query->where('username' . ' LIKE ' . $db->quote($decoded_token->preferred_username));
+        $db->setQuery($query);
+        $db->query();
+        $query_result = $db->loadObject();
+        if (!$query_result) {
+            return null;
+        }
+        $user_id = $query_result->id;
+
+        // Link the user
+        $query = $db->getQuery(true);
+        $query->insert(self::OIDC_TABLE_NAME)
+                ->set('user_id = ' . $user_id)
+                ->set('oidc_uuid = ' . $db->quote($decoded_token->sub));
+        $db->setQuery($query);
+        $db->query();
+
+        return JFactory::getUser($user_id);
     }
 
     public static function updateUserRoles($decoded_token) {
