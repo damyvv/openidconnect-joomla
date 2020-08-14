@@ -66,6 +66,13 @@ class OpenIDConnectHelper
         }
         $user_id = $query_result->id;
 
+        // Delete old links
+        $query = $db->getQuery(true);
+        $query->delete(self::OIDC_TABLE_NAME);
+        $query->where('user_id = ' . $user_id);
+        $db->setQuery($query);
+        $db->query();
+
         // Link the user
         $query = $db->getQuery(true);
         $query->insert(self::OIDC_TABLE_NAME)
