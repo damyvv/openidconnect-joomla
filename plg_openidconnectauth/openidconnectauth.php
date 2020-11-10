@@ -30,8 +30,7 @@ class plgAuthenticationOpenIDConnectAuth extends JPlugin
      */
     function onUserAuthenticate( $credentials, $options, &$response )
     {
-        $app = JFactory::getApplication();
-        $params = $app->getParams('com_openidconnect');
+        $params = JComponentHelper::getParams('com_openidconnect');
         $kid = $params->get('kid');
         $cert = $params->get('cert');
         

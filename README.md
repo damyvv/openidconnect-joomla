@@ -11,3 +11,8 @@ Features:
 - Role management from the authentication server
 - Administrator panel **NOT** affected
 - Works with either the standard login form or with redirect to allow SSO
+
+**Redirection URL for SSO login**
+```
+/index.php?option=com_openidconnect&task=login
+```

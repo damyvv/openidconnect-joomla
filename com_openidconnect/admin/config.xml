@@ -44,5 +44,11 @@
             label="Client secret"
             description="Client secret as set in the authorization server.">
         </field>
+        <field
+            name="enforce_roles"
+            type="checkbox"
+            label="Enforce roles"
+            description="Enforce user permission roles">
+        </field>
     </fieldset>
 </config>

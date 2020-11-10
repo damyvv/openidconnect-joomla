@@ -87,6 +87,9 @@ class OpenIDConnectHelper
     public static function updateUserRoles($decoded_token) {
         $app = JFactory::getApplication();
         $params = $app->getParams('com_openidconnect');
+        if (!($params->get('enforce_roles') || false)) {
+            return;
+        }
         $client_id = $params->get('client_id');
         $user = self::getUserFromToken($decoded_token);
 
