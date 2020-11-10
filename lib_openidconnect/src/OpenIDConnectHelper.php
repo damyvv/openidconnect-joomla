@@ -46,6 +46,10 @@ class OpenIDConnectHelper
                         ->set('oidc_uuid = ' . $db->quote($decoded_token->sub));
                 $db->setQuery($query);
                 $db->query();
+
+                // Add to registered user group
+                $db->setQuery('SELECT id FROM #__usergroups' . ' WHERE LOWER(title) LIKE "registered"');
+                JUserHelper::addUserToGroup($user->id, $db->loadObject()->id);
             }
         }
         return $user;
