@@ -92,7 +92,7 @@ class OpenIDConnectController extends JControllerLegacy
         $app = JFactory::getApplication();
         $params = $app->getParams('com_openidconnect');
         $base_url = JUri::base();
-        $client_id = 'joomla';
+        $client_id = $params->get('client_id');
         $response_type = 'code';
         $this->setRedirect($params->get('authorization_server_endpoint') . '/auth' . 
             '?client_id=' . $client_id .
