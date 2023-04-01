@@ -8,7 +8,7 @@
 	<authorUrl>https://www.coval.nl</authorUrl>
 	<copyright>2020 Coval B.V.</copyright>
 	<license>GNU General Public License version 3</license>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
     <description>OpenID Connect JWT Library</description>
     <files>
         <folder>src</folder>

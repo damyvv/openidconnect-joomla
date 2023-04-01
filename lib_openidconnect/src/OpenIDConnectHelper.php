@@ -45,7 +45,7 @@ class OpenIDConnectHelper
                         ->set('user_id = ' . $user->id)
                         ->set('oidc_uuid = ' . $db->quote($decoded_token->sub));
                 $db->setQuery($query);
-                $db->query();
+                $db->execute();
 
                 // Add to registered user group
                 $db->setQuery('SELECT id FROM #__usergroups' . ' WHERE LOWER(title) LIKE "registered"');
@@ -63,7 +63,7 @@ class OpenIDConnectHelper
         $query->from($user_table);
         $query->where('username' . ' LIKE ' . $db->quote($decoded_token->preferred_username));
         $db->setQuery($query);
-        $db->query();
+        $db->execute();
         $query_result = $db->loadObject();
         if (!$query_result) {
             return null;
@@ -75,7 +75,7 @@ class OpenIDConnectHelper
         $query->delete(self::OIDC_TABLE_NAME);
         $query->where('user_id = ' . $user_id);
         $db->setQuery($query);
-        $db->query();
+        $db->execute();
 
         // Link the user
         $query = $db->getQuery(true);
@@ -83,7 +83,7 @@ class OpenIDConnectHelper
                 ->set('user_id = ' . $user_id)
                 ->set('oidc_uuid = ' . $db->quote($decoded_token->sub));
         $db->setQuery($query);
-        $db->query();
+        $db->execute();
 
         return JFactory::getUser($user_id);
     }
